@@ -1,45 +1,82 @@
 from msvcrt import getch
 import random
-import os
+import threading
+import time
+import sys
 
-screenWidth=35
+screenWidth=30
 screenHeight=20
-
 ballX=5
 ballY=5
 ballVX=1
-ballVY=1
-
-brickX=random.randrange(5,30)
+ballVY=.5
+brickX=random.randrange(5,25)
 brickY=random.randrange(5,10)
 brickWidth=random.randrange(3,5);
-
 paddleX=(35/2)-2.5
 paddleY=screenHeight-2
 paddleWidth=5
 control=''
+run=False
+threading1=None
 
-print("Hold W-A-S-D to move the paddle. \nThe @-bricks will spawn randomly as you hit them. \nBeing too aggressive will cause you to miss. \nPress the controls to start.")
-while 1==1:
-    #update
-    #######
+def menu():
+    # now threading1 runs regardless of user input
+    input('Press ENTER to start.\nHold W-A-S-D to move. Q to quit.')
+    threading1 = threading.Thread(target=background)
+    threading1.daemon = True
+    threading1.start()
 
-    #controls
-    control=str(getch())
-    if control=="b'a'" and paddleX>1:
-        paddleX=paddleX-1
-    if control=="b'd'" and paddleX<(screenWidth-2-paddleWidth):
-        paddleX=paddleX+1
-    if control=="b'w'" and paddleY>1:
-        paddleY=paddleY-1
-    if control=="b's'" and paddleY<screenHeight-2:
-        paddleY=paddleY+1
-    if control=="b'q'":
-        exit()
-    control=''
+
+def controls():
+    global paddleX
+    global screenWidth
+    global screenHeight
+    global ballX
+    global ballY
+    global ballVX
+    global ballVY
+    global brickX
+    global brickY
+    global brickWidth
+    global paddleX
+    global paddleY
+    global paddleWidthX
+
+    if getch():
+        control=str(getch())
+        if control=="b'a'" and paddleX>1:
+            paddleX=paddleX-1
+        if control=="b'd'" and paddleX<(screenWidth-2-paddleWidth):
+            paddleX=paddleX+1
+        if control=="b'w'" and paddleY>1:
+            paddleY=paddleY-1
+        if control=="b's'" and paddleY<screenHeight-2:
+            paddleY=paddleY+1
+        if control=="b'q'":
+            sys.exit()
+        control=''
+        return True
+    else:
+        return False
+
+def update():
+    global paddleX
+    global screenWidth
+    global screenHeight
+    global ballX
+    global ballY
+    global ballVX
+    global ballVY
+    global brickX
+    global brickY
+    global brickWidth
+    global paddleX
+    global paddleY
+    global paddleWidthX
 
     #ball behavior
-    if ballX<=1 or ballX>=screenWidth-1:
+    if ballX<=1 or ballX>=screenWidth-2:
         ballVX=-ballVX
 
     if (ballX>paddleX and ballX<(paddleX+paddleWidth) and ballY==paddleY-1):
@@ -47,7 +84,7 @@ while 1==1:
     if ballY<=1:
         ballVY=-ballVY
     if ballY>screenHeight:
-        exit()
+        return False
 
     if ( ballX>=(brickX-1) and ballX<(brickX+brickWidth+1) ) and (ballY>=brickY-1 and ballY<=brickY+1):
         ballVY=-ballVY
@@ -57,11 +94,9 @@ while 1==1:
 
     ballX=ballX+ballVX
     ballY=ballY+ballVY
+    return True
 
-
-
-    #render
-    #######
+def render():
     for i in range(0,99):
         print(' \n')
     line=''
@@ -89,6 +124,17 @@ while 1==1:
         line=line+'\n'
         print(line)
 
-    #capture key input for next loop
-    ################################
-    #control=str(getch())
+def background():
+    while True:
+        if update()==True:
+            time.sleep(0.3)
+            update()
+            render()
+        else:
+            print('You lost. Hold Q to quit.')
+            exit()
+
+menu()
+while True:
+    if controls()==True:
+        controls()
